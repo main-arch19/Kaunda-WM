@@ -1,0 +1,101 @@
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties ─────────────────────────── */
+:root {
+  --bg-primary:      #ffffff;
+  --bg-secondary:    #F4F6FA;
+  --bg-card:         #ffffff;
+  --text-primary:    #0A1F4E;
+  --text-secondary:  #4B5563;
+  --text-muted:      #9CA3AF;
+  --border-color:    #E5E7EB;
+  --border-accent:   rgba(240, 198, 70, 0.3);
+  --shadow-card:     0 4px 20px rgba(10,31,78,0.08);
+}
+
+.dark {
+  --bg-primary:      #0A1F4E;
+  --bg-secondary:    #0D3A9E;
+  --bg-card:         rgba(255,255,255,0.05);
+  --text-primary:    #F4F6FA;
+  --text-secondary:  #D1D5DB;
+  --text-muted:      #9CA3AF;
+  --border-color:    rgba(27,93,229,0.4);
+  --border-accent:   rgba(240, 198, 70, 0.4);
+  --shadow-card:     0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* ─── Base Styles ────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-open-sans), 'Open Sans', sans-serif;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Typography ─────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ─── Leaflet Fixes ──────────────────────────────────── */
+.leaflet-container {
+  background-color: #e8f0fe;
+  border-radius: 12px;
+  z-index: 0;
+}
+
+.leaflet-pane,
+.leaflet-tile-pane,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane,
+.leaflet-popup-pane,
+.leaflet-tooltip-pane {
+  z-index: auto;
+}
+
+/* ─── Custom Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: #1B5DE5; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #0D3A9E; }
+
+/* ─── Range Input Gold Accent ────────────────────────── */
+input[type="range"] {
+  accent-color: #F0C646;
+}
+input[type="range"]::-webkit-slider-thumb {
+  background: #F0C646;
+}
+
+/* ─── Smooth transitions for theme-aware elements ───── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Exclude transforms from global transition override */
+.no-transition-override {
+  transition: none !important;
+}
+
+/* ─── Section gold divider ───────────────────────────── */
+.gold-divider {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #F0C646, transparent);
+  border: none;
+  width: 100%;
+}
