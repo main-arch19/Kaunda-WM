@@ -5,7 +5,6 @@ import ServiceArea from '@/components/sections/ServiceArea'
 import ImpactStats from '@/components/sections/ImpactStats'
 import ScheduleServices from '@/components/sections/ScheduleServices'
 import WasteWizard from '@/components/sections/WasteWizard'
-import SustainabilityCalculator from '@/components/sections/SustainabilityCalculator'
 import LiveTracking from '@/components/sections/LiveTracking'
 
 export default function Home() {
@@ -28,9 +27,6 @@ export default function Home() {
         <div className="gold-divider" />
 
         <WasteWizard />
-        <div className="gold-divider" />
-
-        <SustainabilityCalculator />
         <div className="gold-divider" />
 
         <LiveTracking />

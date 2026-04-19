@@ -1,21 +1,12 @@
 'use client'
 
-import { useState, useMemo, FormEvent } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Check, X, Calendar, Package, Calculator, BookOpen } from 'lucide-react'
+import { ChevronDown, Check, X, Calendar, Package, BookOpen } from 'lucide-react'
 import SectionWrapper, { SectionHeader } from '@/components/shared/SectionWrapper'
-import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
 import Card from '@/components/ui/Card'
-import Modal from '@/components/ui/Modal'
-import Input from '@/components/ui/Input'
-import Badge from '@/components/ui/Badge'
 import { schedules, collectionTypeConfig, buildWeekMap, type CollectionType } from '@/data/schedules'
-import {
-  calculatePrice, ADD_ONS, SERVICE_LABELS, VOLUME_LABELS,
-  type ServiceType, type VolumeUnit, type Frequency
-} from '@/lib/pricingCalculator'
-import { useToast } from '@/hooks/useToast'
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as const
 
@@ -75,16 +66,7 @@ const bins = [
   },
 ]
 
-const serviceOptions = (Object.keys(SERVICE_LABELS) as ServiceType[]).map(k => ({ value: k, label: SERVICE_LABELS[k] }))
-const volumeOptions  = (Object.keys(VOLUME_LABELS)  as VolumeUnit[]).map(k  => ({ value: k, label: VOLUME_LABELS[k]  }))
-
-function formatJMD(n: number) {
-  return new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD', maximumFractionDigits: 0 }).format(n)
-}
-
 export default function ScheduleServices() {
-  const { toast } = useToast()
-
   // Schedule tab
   const [parish, setParish]     = useState('Kingston')
   const parishSchedule          = schedules.find(s => s.parish === parish) ?? schedules[0]
@@ -93,49 +75,7 @@ export default function ScheduleServices() {
   // Bin guide
   const [activeBin, setActiveBin] = useState<string | null>(null)
 
-  // Pricing
-  const [serviceType, setServiceType] = useState<ServiceType>('residential-standard')
-  const [volume,      setVolume]      = useState<VolumeUnit>('1-bin')
-  const [frequency,   setFrequency]   = useState<Frequency>('weekly')
-  const [addOnIds,    setAddOnIds]    = useState<string[]>([])
-
-  const pricing = useMemo(
-    () => calculatePrice(serviceType, volume, frequency, addOnIds),
-    [serviceType, volume, frequency, addOnIds]
-  )
-
-  function toggleAddOn(id: string) {
-    setAddOnIds(ids => ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id])
-  }
-
-  // Booking modal
-  const [modalOpen, setModalOpen]   = useState(false)
-  const [bookForm,  setBookForm]    = useState({ name: '', email: '', phone: '', address: '', notes: '' })
-  const [bookErrors,setBookErrors]  = useState<Partial<typeof bookForm>>({})
-  const [booking,   setBooking]     = useState(false)
-
-  function validateBook() {
-    const e: Partial<typeof bookForm> = {}
-    if (!bookForm.name.trim())  e.name  = 'Required'
-    if (!bookForm.email.trim()) e.email = 'Required'
-    else if (!/\S+@\S+/.test(bookForm.email)) e.email = 'Invalid email'
-    if (!bookForm.phone.trim()) e.phone = 'Required'
-    setBookErrors(e)
-    return Object.keys(e).length === 0
-  }
-
-  async function handleBook(e: FormEvent) {
-    e.preventDefault()
-    if (!validateBook()) return
-    setBooking(true)
-    await new Promise(r => setTimeout(r, 900))
-    setBooking(false)
-    setModalOpen(false)
-    toast("Booking submitted! Our team will contact you within 24 hours.", 'success')
-    setBookForm({ name: '', email: '', phone: '', address: '', notes: '' })
-  }
-
-  const [activeTab, setActiveTab] = useState<'schedule' | 'bins' | 'pricing'>('schedule')
+  const [activeTab, setActiveTab] = useState<'schedule' | 'bins'>('schedule')
 
   return (
     <SectionWrapper id="schedule">
@@ -148,9 +88,8 @@ export default function ScheduleServices() {
       {/* Tab nav */}
       <div className="flex gap-2 mb-8 border-b border-[var(--border-color)]">
         {[
-          { id: 'schedule', label: 'My Schedule',       icon: Calendar  },
-          { id: 'bins',     label: 'Bin Guide',          icon: Package   },
-          { id: 'pricing',  label: 'Price Calculator',   icon: Calculator},
+          { id: 'schedule', label: 'My Schedule', icon: Calendar },
+          { id: 'bins',     label: 'Bin Guide',   icon: Package  },
         ].map(tab => (
           <button
             key={tab.id}
@@ -321,162 +260,7 @@ export default function ScheduleServices() {
           </motion.div>
         )}
 
-        {/* ─── PRICING TAB ───────────────────────────────── */}
-        {activeTab === 'pricing' && (
-          <motion.div
-            key="pricing"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{    opacity: 0, y: 12 }}
-            transition={{ duration: 0.25 }}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Controls */}
-              <div className="space-y-5">
-                <Select
-                  label="Service Type"
-                  value={serviceType}
-                  onChange={v => setServiceType(v as ServiceType)}
-                  options={serviceOptions}
-                />
-                <Select
-                  label="Volume / Number of Bins"
-                  value={volume}
-                  onChange={v => setVolume(v as VolumeUnit)}
-                  options={volumeOptions}
-                />
-                <div>
-                  <label className="text-sm font-semibold font-body text-[var(--text-primary)] block mb-2">Collection Frequency</label>
-                  <div className="flex gap-2">
-                    {(['weekly','biweekly','monthly'] as Frequency[]).map(f => (
-                      <button
-                        key={f}
-                        onClick={() => setFrequency(f)}
-                        className={`flex-1 py-2 rounded-btn text-xs font-heading font-bold transition-all border-2 ${
-                          frequency === f
-                            ? 'bg-brand-blue text-white border-brand-blue'
-                            : 'bg-transparent text-[var(--text-secondary)] border-[var(--border-color)] hover:border-brand-blue/50'
-                        }`}
-                      >
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Add-ons */}
-                <div>
-                  <label className="text-sm font-semibold font-body text-[var(--text-primary)] block mb-2">Optional Add-ons</label>
-                  <div className="space-y-2">
-                    {ADD_ONS.map(ao => (
-                      <label key={ao.id} className={`flex items-center gap-3 p-3 rounded-card border cursor-pointer transition-all ${
-                        addOnIds.includes(ao.id)
-                          ? 'border-brand-blue bg-brand-blue/5'
-                          : 'border-[var(--border-color)] hover:border-brand-blue/30'
-                      }`}>
-                        <input
-                          type="checkbox"
-                          checked={addOnIds.includes(ao.id)}
-                          onChange={() => toggleAddOn(ao.id)}
-                          className="accent-brand-blue"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-body font-semibold text-[var(--text-primary)]">{ao.name}</p>
-                          <p className="text-xs font-body text-[var(--text-muted)]">{ao.description}</p>
-                        </div>
-                        <span className="text-xs font-heading font-bold text-brand-blue">+{formatJMD(ao.priceMonthly)}/mo</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Results */}
-              <div>
-                <Card className="border-brand-blue/20 sticky top-24">
-                  <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-4">Your Estimate</h3>
-
-                  <div className="text-center bg-brand-navy rounded-card p-5 mb-4">
-                    <p className="text-white/60 text-xs font-body uppercase tracking-widest mb-1">Monthly Total</p>
-                    <p className="font-heading font-bold text-4xl text-brand-gold">
-                      {formatJMD(pricing.monthlyTotal)}
-                    </p>
-                    <p className="text-white/50 text-xs font-body mt-1">
-                      ≈ {formatJMD(pricing.perCollection)} per collection
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-[var(--bg-secondary)] rounded-card p-3 text-center">
-                      <p className="text-xs font-body text-[var(--text-muted)]">Annual</p>
-                      <p className="font-heading font-bold text-lg text-[var(--text-primary)]">{formatJMD(pricing.annualTotal)}</p>
-                    </div>
-                    <div className="bg-[var(--bg-secondary)] rounded-card p-3 text-center">
-                      <p className="text-xs font-body text-[var(--text-muted)]">Base</p>
-                      <p className="font-heading font-bold text-lg text-[var(--text-primary)]">{formatJMD(pricing.baseMonthly)}</p>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="text-xs font-heading font-bold uppercase text-[var(--text-muted)] mb-2">What&apos;s included:</p>
-                    <ul className="space-y-1">
-                      {pricing.includes.map(i => (
-                        <li key={i} className="flex items-center gap-2 text-xs font-body text-[var(--text-secondary)]">
-                          <Check className="w-3.5 h-3.5 text-brand-blue flex-shrink-0" /> {i}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <p className="text-xs font-body text-[var(--text-muted)] mb-4 italic">
-                    * Estimate in JMD. Final pricing subject to site assessment. Prices exclude GCT.
-                  </p>
-
-                  <Button variant="primary" size="lg" className="w-full" onClick={() => setModalOpen(true)}>
-                    Book This Service
-                  </Button>
-                </Card>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </AnimatePresence>
-
-      {/* Booking Modal */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Book Your Service"
-        size="md"
-      >
-        <form onSubmit={handleBook} className="space-y-4">
-          <div className="bg-brand-navy/10 dark:bg-white/5 rounded-card px-4 py-3 mb-2">
-            <p className="text-xs font-body text-[var(--text-muted)]">Service selected:</p>
-            <p className="font-heading font-bold text-sm text-brand-blue">{SERVICE_LABELS[serviceType]} — {VOLUME_LABELS[volume]}</p>
-            <p className="font-heading font-bold text-lg text-brand-navy dark:text-brand-gold">{formatJMD(pricing.monthlyTotal)}/month</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input label="Full Name *"       value={bookForm.name}    onChange={e => setBookForm(f => ({...f, name:    e.target.value}))} error={bookErrors.name}    placeholder="John Brown" />
-            <Input label="Email Address *"   value={bookForm.email}   onChange={e => setBookForm(f => ({...f, email:   e.target.value}))} error={bookErrors.email}   placeholder="john@example.com" type="email" />
-            <Input label="Phone Number *"    value={bookForm.phone}   onChange={e => setBookForm(f => ({...f, phone:   e.target.value}))} error={bookErrors.phone}   placeholder="876-XXX-XXXX" />
-            <Input label="Service Address"   value={bookForm.address} onChange={e => setBookForm(f => ({...f, address: e.target.value}))} placeholder="Kingston, Jamaica" />
-          </div>
-          <div>
-            <label className="text-sm font-semibold font-body text-[var(--text-primary)] block mb-1">Additional Notes</label>
-            <textarea
-              rows={3}
-              value={bookForm.notes}
-              onChange={e => setBookForm(f => ({...f, notes: e.target.value}))}
-              placeholder="Special requirements, access instructions, etc."
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-input px-3 py-2.5 text-sm font-body focus:outline-none focus:border-brand-blue resize-none"
-            />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" size="md" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" size="md" className="flex-1" isLoading={booking}>Confirm Booking</Button>
-          </div>
-        </form>
-      </Modal>
     </SectionWrapper>
   )
 }
